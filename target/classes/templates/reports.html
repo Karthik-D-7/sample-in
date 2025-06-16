@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Smart Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #2c5364 100%);
+            color: #e3eafc;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px;
+        }
+        .panel {
+            background: rgba(30, 42, 61, 0.7);
+            border-radius: 32px;
+            box-shadow: 0 8px 40px 0 rgba(44,83,100,0.18), 0 1.5px 8px 0 rgba(15,32,39,0.10);
+            padding: 36px 32px 40px 32px;
+            margin-bottom: 24px;
+            border: 2px solid #2c5364;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            color: #29d2e4;
+            font-size: 2.2rem;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        /* Reports Header */
+        .reports-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .date-range {
+            padding: 12px 20px;
+            border-radius: 14px;
+            border: 2px solid #29d2e4;
+            font-size: 1rem;
+            background: rgba(41,210,228,0.08);
+            color: #e3eafc;
+            transition: all 0.3s;
+        }
+        .date-range:focus {
+            border-color: #2c5364;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(41,210,228,0.10);
+        }
+        .export-btn {
+            background: linear-gradient(135deg, #29d2e4 60%, #2c5364 100%);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(41,210,228,0.10);
+        }
+        .export-btn:hover {
+            background: linear-gradient(135deg, #2c5364 60%, #29d2e4 100%);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .kpi-card {
+            background: rgba(41,210,228,0.12);
+            border-radius: 20px;
+            padding: 24px 20px;
+            color: #29d2e4;
+            box-shadow: 0 2px 12px rgba(41,210,228,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+        }
+        .kpi-icon {
+            font-size: 2.2rem;
+            color: #29d2e4;
+            margin-bottom: 10px;
+        }
+        .kpi-title {
+            font-size: 1rem;
+            opacity: 0.85;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .kpi-value {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .kpi-change {
+            font-size: 0.95rem;
+            color: #7fffd4;
+        }
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+            margin-bottom: 32px;
+        }
+        .chart-card {
+            background: rgba(41,210,228,0.10);
+            border-radius: 20px;
+            padding: 28px 24px;
+            box-shadow: 0 4px 16px rgba(41,210,228,0.10);
+            border: 2px solid #29d2e4;
+        }
+        .chart-title {
+            color: #29d2e4;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        /* Reports Table */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 24px;
+        }
+        .report-card {
+            background: rgba(255,255,255,0.10);
+            border-radius: 20px;
+            padding: 24px 20px;
+            box-shadow: 0 2px 12px rgba(41,210,228,0.08);
+            border: 2px solid #29d2e4;
+            margin-bottom: 24px;
+        }
+        .report-title {
+            color: #29d2e4;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .report-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+        .report-table th, .report-table td {
+            padding: 12px 10px;
+            text-align: left;
+        }
+        .report-table th {
+            background: #29d2e4;
+            color: #fff;
+            font-weight: 700;
+            border-bottom: 2px solid #2c5364;
+            font-size: 1.05rem;
+        }
+        .report-table tr {
+            background: rgba(41,210,228,0.08);
+            border-radius: 10px;
+        }
+        .report-table td {
+            color: #e3eafc;
+            font-size: 1rem;
+            border-bottom: 1px solid #2c5364;
+        }
+        .download-btn, .print-btn {
+            background: #29d2e4;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 18px;
+            font-size: 0.98rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .download-btn:hover, .print-btn:hover {
+            background: #2c5364;
+            color: #29d2e4;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            overflow: auto;
+            background: rgba(41,210,228,0.10);
+        }
+        .modal-content {
+            background: rgba(30, 42, 61, 0.95);
+            margin: 8% auto;
+            padding: 36px 32px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(41,210,228,0.18);
+            position: relative;
+            border: 2px solid #29d2e4;
+            backdrop-filter: blur(8px);
+        }
+        .close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: #29d2e4;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #29d2e4;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            color: #e3eafc;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid #29d2e4;
+            font-size: 1rem;
+            background: #1e2a3d;
+            color: #e3eafc;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            border-color: #29d2e4;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(41,210,228,0.08);
+        }
+        .save-btn {
+            background: #29d2e4;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 0;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .save-btn:hover {
+            background: #2c5364;
+            color: #29d2e4;
+        }
+        @media (max-width: 800px) {
+            .main-content { margin-left: 0; padding: 16px; }
+            .reports-header { flex-direction: column; align-items: stretch; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .reports-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+    <div class="panel">
+        <h1><i class="fas fa-chart-bar"></i> Reports & Analytics</h1>
+        <!-- Reports Header -->
+        <div class="reports-header">
+            <input class="date-range" type="date" value="2024-06-01">
+            <input class="date-range" type="date" value="2024-06-05">
+            <button class="export-btn"><i class="fas fa-download"></i> Export</button>
+        </div>
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <i class="fas fa-rupee-sign kpi-icon"></i>
+                <div class="kpi-title">Total Sales</div>
+                <div class="kpi-value">₹8,45,000</div>
+                <div class="kpi-change">+12% this month</div>
+            </div>
+            <div class="kpi-card">
+                <i class="fas fa-shopping-cart kpi-icon"></i>
+                <div class="kpi-title">Total Orders</div>
+                <div class="kpi-value">1,120</div>
+                <div class="kpi-change">+8% this month</div>
+            </div>
+            <div class="kpi-card">
+                <i class="fas fa-chart-line kpi-icon"></i>
+                <div class="kpi-title">Avg. Order Value</div>
+                <div class="kpi-value">₹755</div>
+                <div class="kpi-change">+5% this month</div>
+            </div>
+            <div class="kpi-card">
+                <i class="fas fa-percent kpi-icon"></i>
+                <div class="kpi-title">Profit Margin</div>
+                <div class="kpi-value">32%</div>
+                <div class="kpi-change">+2% this month</div>
+            </div>
+        </div>
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Sales Trends</div>
+                <div class="chart-container">
+                    <canvas id="salesChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Order Status Distribution</div>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- Reports Table -->
+        <div class="reports-grid">
+            <div class="report-card">
+                <div class="report-title">Top Selling Products</div>
+                <table class="report-table">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Units Sold</th>
+                        <th>Revenue</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Wireless Mouse Pro</td>
+                        <td>Electronics</td>
+                        <td>245</td>
+                        <td>₹3,67,500</td>
+                    </tr>
+                    <tr>
+                        <td>USB-C Cable</td>
+                        <td>Accessories</td>
+                        <td>180</td>
+                        <td>₹53,820</td>
+                    </tr>
+                    <tr>
+                        <td>Ergonomic Chair</td>
+                        <td>Furniture</td>
+                        <td>90</td>
+                        <td>₹11,69,910</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <button class="download-btn"><i class="fas fa-download"></i> Download</button>
+                <button class="print-btn"><i class="fas fa-print"></i> Print</button>
+            </div>
+            <div class="report-card">
+                <div class="report-title">Inventory Status</div>
+                <table class="report-table">
+                    <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>Wireless Mouse Pro</td>
+                        <td>245</td>
+                        <td>In Stock</td>
+                    </tr>
+                    <tr>
+                        <td>USB-C Cable</td>
+                        <td>12</td>
+                        <td>Low Stock</td>
+                    </tr>
+                    <tr>
+                        <td>Ergonomic Chair</td>
+                        <td>0</td>
+                        <td>Out of Stock</td>
+                    </tr>
+                    </tbody>
+                </table>
+                <button class="download-btn"><i class="fas fa-download"></i> Download</button>
+                <button class="print-btn"><i class="fas fa-print"></i> Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    // Sales Trends Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Sales',
+                data: [120000, 135000, 150000, 140000, 160000, 170000],
+                borderColor: '#29d2e4',
+                backgroundColor: 'rgba(41,210,228,0.10)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(41,210,228,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    // Order Status Distribution Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
+            datasets: [{
+                data: [980, 30, 90, 20],
+                backgroundColor: ['#7fffd4', '#29d2e4', '#2c5364', '#e74c3c'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html> 

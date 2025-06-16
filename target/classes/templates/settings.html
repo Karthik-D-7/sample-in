@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Smart Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Manrope', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 60%, #e0e7ef 100%);
+            color: #232946;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px;
+        }
+        .panel {
+            background: rgba(255,255,255,0.85);
+            border-radius: 32px;
+            box-shadow: 0 8px 40px 0 rgba(44,62,80,0.10), 0 1.5px 8px 0 rgba(41,128,185,0.08);
+            padding: 36px 32px 40px 32px;
+            margin-bottom: 24px;
+            border: 2px solid #e0e7ef;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+        h1 {
+            color: #2563eb;
+            font-size: 2.2rem;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+        .settings-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 24px;
+            box-shadow: 0 2px 16px rgba(41,128,185,0.10);
+            padding: 32px 28px 28px 28px;
+            margin-bottom: 24px;
+            border: 2px solid #e0e7ef;
+            position: relative;
+            backdrop-filter: blur(4px);
+        }
+        .settings-title {
+            color: #2563eb;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .settings-title i {
+            font-size: 1.3rem;
+            color: #2563eb;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            display: block;
+            color: #232946;
+            font-size: 0.98rem;
+            margin-bottom: 8px;
+        }
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid #e0e7ef;
+            font-size: 1rem;
+            background: #f8fafc;
+            color: #232946;
+            transition: all 0.3s;
+        }
+        .form-input:focus, .form-select:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(37,99,235,0.08);
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 28px;
+            vertical-align: middle;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #e0e7ef;
+            border-radius: 28px;
+            transition: .4s;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background: #2563eb;
+            border-radius: 50%;
+            transition: .4s;
+        }
+        .toggle-switch input:checked + .slider {
+            background: #2563eb;
+        }
+        .toggle-switch input:checked + .slider:before {
+            background: #fff;
+            transform: translateX(20px);
+        }
+        .save-btn {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 0;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 18px;
+        }
+        .save-btn:hover {
+            background: #1d4ed8;
+        }
+        @media (max-width: 1100px) {
+            .settings-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 800px) {
+            .main-content { margin-left: 0; padding: 16px; }
+            .settings-card { padding: 20px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+    <div class="panel">
+        <h1><i class="fas fa-cog"></i> Settings</h1>
+        <div class="settings-grid">
+            <!-- Profile Settings -->
+            <div class="settings-card">
+                <div class="settings-title"><i class="fas fa-user-circle"></i> Profile Settings</div>
+                <div class="form-group">
+                    <label class="form-label">Company Name</label>
+                    <input type="text" class="form-input" value="Smart Inventory Pvt Ltd">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" value="info@smartinventory.com">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="tel" class="form-input" value="+91 9876543210">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address</label>
+                    <input type="text" class="form-input" value="123 Main St, Mumbai, India">
+                </div>
+                <button class="save-btn">Save Profile</button>
+            </div>
+            <!-- System Settings -->
+            <div class="settings-card">
+                <div class="settings-title"><i class="fas fa-sliders-h"></i> System Settings</div>
+                <div class="form-group">
+                    <label class="form-label">Currency</label>
+                    <select class="form-select">
+                        <option selected>INR (₹)</option>
+                        <option>USD ($)</option>
+                        <option>EUR (€)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Time Zone</label>
+                    <select class="form-select">
+                        <option selected>Asia/Kolkata (IST)</option>
+                        <option>America/New_York (EST)</option>
+                        <option>Europe/London (GMT)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date Format</label>
+                    <select class="form-select">
+                        <option selected>DD/MM/YYYY</option>
+                        <option>MM/DD/YYYY</option>
+                        <option>YYYY-MM-DD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Two-Factor Authentication</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button class="save-btn">Save System Settings</button>
+            </div>
+            <!-- Notification Settings -->
+            <div class="settings-card">
+                <div class="settings-title"><i class="fas fa-bell"></i> Notification Settings</div>
+                <div class="form-group">
+                    <label class="form-label">Low Stock Alerts</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Order Updates</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Reminders</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">System Updates</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button class="save-btn">Save Notification Settings</button>
+            </div>
+            <!-- Backup Settings -->
+            <div class="settings-card">
+                <div class="settings-title"><i class="fas fa-database"></i> Backup Settings</div>
+                <div class="form-group">
+                    <label class="form-label">Automatic Daily Backup</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Backup Time</label>
+                    <input type="time" class="form-input" value="02:00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Retention Period (days)</label>
+                    <input type="number" class="form-input" value="30">
+                </div>
+                <button class="save-btn">Download Backup</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html> 

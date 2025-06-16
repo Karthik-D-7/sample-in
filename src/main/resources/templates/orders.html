@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Smart Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 60%, #e0e7ff 100%);
+            color: #232946;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px;
+        }
+        .panel {
+            background: #fff;
+            border-radius: 24px;
+            box-shadow: 0 4px 32px rgba(44,62,80,0.10);
+            padding: 32px 28px 36px 28px;
+            margin-bottom: 24px;
+            border: 2px solid #e0e7ff;
+            position: relative;
+            overflow: hidden;
+        }
+        h1 {
+            color: #7c3aed;
+            font-size: 2.2rem;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #e0e7ff 60%, #f3e8ff 100%);
+            color: #7c3aed;
+            border-radius: 18px;
+            padding: 22px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            box-shadow: 0 2px 12px rgba(124,58,237,0.08);
+            position: relative;
+        }
+        .stat-icon {
+            font-size: 2.2rem;
+            color: #7c3aed;
+            margin-bottom: 10px;
+        }
+        .stat-title {
+            font-size: 1rem;
+            opacity: 0.85;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .stat-value {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .stat-change {
+            font-size: 0.95rem;
+            color: #10b981;
+        }
+        /* Orders Header */
+        .orders-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .search-box {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid #e0e7ff;
+            font-size: 1rem;
+            background: #f3f4f6;
+            color: #232946;
+            transition: all 0.3s;
+        }
+        .search-box:focus {
+            border-color: #7c3aed;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(124,58,237,0.08);
+        }
+        .add-btn {
+            background: #7c3aed;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(124,58,237,0.10);
+        }
+        .add-btn:hover {
+            background: #a78bfa;
+            color: #232946;
+            transform: translateY(-2px);
+        }
+        /* Orders Timeline */
+        .orders-timeline {
+            margin-bottom: 32px;
+        }
+        .timeline-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            background: #f3e8ff;
+            border-radius: 16px;
+            padding: 18px 24px;
+            box-shadow: 0 2px 8px rgba(124,58,237,0.06);
+            position: relative;
+        }
+        .timeline-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #7c3aed;
+            margin-top: 6px;
+            box-shadow: 0 0 0 4px #e0e7ff;
+        }
+        .timeline-content {
+            flex: 1;
+        }
+        .timeline-title {
+            color: #7c3aed;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .timeline-desc {
+            color: #232946;
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .timeline-time {
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+        /* Orders Table */
+        .orders-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-bottom: 32px;
+        }
+        .orders-table th, .orders-table td {
+            padding: 14px 12px;
+            text-align: left;
+        }
+        .orders-table th {
+            background: #e0e7ff;
+            color: #7c3aed;
+            font-weight: 700;
+            border-bottom: 2px solid #f3e8ff;
+            font-size: 1.05rem;
+        }
+        .orders-table tr {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(124,58,237,0.08);
+        }
+        .orders-table td {
+            color: #232946;
+            font-size: 1rem;
+            border-bottom: 1px solid #f3e8ff;
+        }
+        .orders-table .status {
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: inline-block;
+        }
+        .completed { background: #d1fae5; color: #059669; }
+        .processing { background: #fef9c3; color: #b45309; }
+        .pending { background: #f3e8ff; color: #7c3aed; }
+        .cancelled { background: #fee2e2; color: #b91c1c; }
+        .action-btn {
+            background: #e0e7ff;
+            color: #7c3aed;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-right: 6px;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            background: #7c3aed;
+            color: #fff;
+        }
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+        .chart-card {
+            background: #f3e8ff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(124,58,237,0.10);
+            border: 2px solid #e0e7ff;
+        }
+        .chart-title {
+            color: #7c3aed;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            overflow: auto;
+            background: rgba(124,58,237,0.10);
+        }
+        .modal-content {
+            background: #fff;
+            margin: 8% auto;
+            padding: 32px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(124,58,237,0.18);
+            position: relative;
+            border: 2px solid #e0e7ff;
+        }
+        .close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: #7c3aed;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            color: #232946;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e0e7ff;
+            font-size: 1rem;
+            background: #f3f4f6;
+            color: #232946;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            border-color: #7c3aed;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(124,58,237,0.08);
+        }
+        .save-btn {
+            background: #7c3aed;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .save-btn:hover {
+            background: #a78bfa;
+            color: #232946;
+        }
+        @media (max-width: 800px) {
+            .main-content { margin-left: 0; padding: 16px; }
+            .orders-header { flex-direction: column; align-items: stretch; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+    <div class="panel">
+        <h1><i class="fas fa-clipboard-list"></i> Orders</h1>
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-shopping-cart stat-icon"></i>
+                <div class="stat-title">Total Orders</div>
+                <div class="stat-value">1,120</div>
+                <div class="stat-change">+8% this month</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle stat-icon"></i>
+                <div class="stat-title">Completed</div>
+                <div class="stat-value">980</div>
+                <div class="stat-change">+5% this month</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-hourglass-half stat-icon"></i>
+                <div class="stat-title">Pending</div>
+                <div class="stat-value">90</div>
+                <div class="stat-change">-3 from last week</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-dollar-sign stat-icon"></i>
+                <div class="stat-title">Total Revenue</div>
+                <div class="stat-value">₹8,45,000</div>
+                <div class="stat-change">+12% growth</div>
+            </div>
+        </div>
+        <!-- Orders Header -->
+        <div class="orders-header">
+            <input class="search-box" type="text" placeholder="Search orders..." id="searchInput" onkeyup="filterOrders()">
+            <button class="add-btn" onclick="openAddModal()"><i class="fas fa-plus"></i> Create Order</button>
+        </div>
+        <!-- Orders Timeline -->
+        <div class="orders-timeline">
+            <ul class="timeline-list">
+                <li class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Order #ORD-1001</div>
+                        <div class="timeline-desc">Shipped to <b>Priya Mehta</b> (Mumbai)</div>
+                        <div class="timeline-time">Today, 11:30 AM</div>
+                    </div>
+                </li>
+                <li class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Order #ORD-1000</div>
+                        <div class="timeline-desc">Delivered to <b>Rakesh Singh</b> (Delhi)</div>
+                        <div class="timeline-time">Yesterday, 4:00 PM</div>
+                    </div>
+                </li>
+                <li class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Order #ORD-0999</div>
+                        <div class="timeline-desc">Processing for <b>John Doe</b> (Pune)</div>
+                        <div class="timeline-time">2 days ago</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <!-- Orders Table -->
+        <table class="orders-table" id="ordersTable">
+            <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>ORD-1001</td>
+                <td>Priya Mehta</td>
+                <td>2024-06-04</td>
+                <td>₹2,499</td>
+                <td><span class="status completed">Completed</span></td>
+                <td>
+                    <button class="action-btn"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+            <tr>
+                <td>ORD-1000</td>
+                <td>Rakesh Singh</td>
+                <td>2024-06-03</td>
+                <td>₹1,299</td>
+                <td><span class="status processing">Processing</span></td>
+                <td>
+                    <button class="action-btn"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+            <tr>
+                <td>ORD-0999</td>
+                <td>John Doe</td>
+                <td>2024-06-02</td>
+                <td>₹3,999</td>
+                <td><span class="status pending">Pending</span></td>
+                <td>
+                    <button class="action-btn"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Order Trends</div>
+                <div class="chart-container">
+                    <canvas id="orderChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Order Status Distribution</div>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Create Order Modal -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddModal()">&times;</span>
+        <div class="modal-title">Create New Order</div>
+        <form class="modal-form">
+            <div class="form-group">
+                <label class="form-label">Customer</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Product</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-input" rows="2"></textarea>
+            </div>
+            <button type="submit" class="save-btn">Create Order</button>
+        </form>
+    </div>
+</div>
+<script>
+    // Order Trends Chart
+    const orderCtx = document.getElementById('orderChart').getContext('2d');
+    new Chart(orderCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Orders',
+                data: [180, 210, 250, 230, 270, 280],
+                borderColor: '#7c3aed',
+                backgroundColor: 'rgba(124,58,237,0.08)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(124,58,237,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    // Order Status Distribution Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Processing', 'Pending', 'Cancelled'],
+            datasets: [{
+                data: [980, 30, 90, 20],
+                backgroundColor: ['#10b981', '#fde68a', '#a78bfa', '#fca5a5'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+    function openAddModal() {
+        document.getElementById('addModal').style.display = 'block';
+    }
+    function closeAddModal() {
+        document.getElementById('addModal').style.display = 'none';
+    }
+    window.onclick = function(event) {
+        if (event.target === document.getElementById('addModal')) {
+            closeAddModal();
+        }
+    }
+    function filterOrders() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#ordersTable tbody tr');
+        rows.forEach(row => {
+            const id = row.children[0].textContent.toLowerCase();
+            const customer = row.children[1].textContent.toLowerCase();
+            if (id.includes(search) || customer.includes(search)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+</body>
+</html> 

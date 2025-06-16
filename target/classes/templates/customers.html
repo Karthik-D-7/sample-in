@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - Smart Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f3e8ff 60%, #fce4ec 100%);
+            color: #232946;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px;
+        }
+        .panel {
+            background: rgba(255,255,255,0.7);
+            border-radius: 32px;
+            box-shadow: 0 8px 40px 0 rgba(124,58,237,0.10), 0 1.5px 8px 0 rgba(236,72,153,0.08);
+            padding: 36px 32px 40px 32px;
+            margin-bottom: 24px;
+            border: 2px solid #e0e7ff;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(8px);
+        }
+        h1 {
+            color: #a21caf;
+            font-size: 2.2rem;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        /* Customers Header */
+        .customers-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .search-box {
+            flex: 1;
+            padding: 14px 22px;
+            border-radius: 18px;
+            border: 2px solid #e0e7ff;
+            font-size: 1rem;
+            background: rgba(243,232,255,0.7);
+            color: #232946;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(124,58,237,0.06);
+        }
+        .search-box:focus {
+            border-color: #a21caf;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(162,28,175,0.08);
+        }
+        .add-btn {
+            background: linear-gradient(135deg, #a21caf 60%, #ec4899 100%);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px rgba(236,72,153,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .add-btn:hover {
+            background: linear-gradient(135deg, #ec4899 60%, #a21caf 100%);
+            color: #fff;
+            transform: translateY(-2px) scale(1.08);
+        }
+        /* Customers Grid */
+        .customers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+        .customer-card {
+            background: rgba(255,255,255,0.85);
+            border-radius: 28px;
+            box-shadow: 0 2px 16px rgba(162,28,175,0.10);
+            padding: 32px 24px 28px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            border: 2px solid #f3e8ff;
+            transition: box-shadow 0.3s, transform 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        .customer-card:hover {
+            box-shadow: 0 8px 32px rgba(236,72,153,0.16);
+            transform: translateY(-4px) scale(1.02);
+        }
+        .customer-avatar {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #a21caf 60%, #ec4899 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 2.5rem;
+            margin-bottom: 18px;
+            box-shadow: 0 2px 12px rgba(236,72,153,0.10);
+            border: 4px solid #fff;
+        }
+        .customer-name {
+            color: #a21caf;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .customer-email {
+            color: #6b7280;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        .customer-phone {
+            color: #ec4899;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        .customer-address {
+            color: #232946;
+            font-size: 0.98rem;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .customer-stats {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 12px;
+        }
+        .stat-item {
+            background: linear-gradient(135deg, #f3e8ff 60%, #fce4ec 100%);
+            border-radius: 12px;
+            padding: 10px 18px;
+            color: #a21caf;
+            font-size: 0.98rem;
+            font-weight: 700;
+            box-shadow: 0 1px 4px rgba(162,28,175,0.06);
+        }
+        .customer-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 10px 0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            text-align: center;
+            font-weight: 700;
+        }
+        .view-btn { background: #f3e8ff; color: #a21caf; }
+        .view-btn:hover { background: #e0e7ff; }
+        .edit-btn { background: #fce4ec; color: #ec4899; }
+        .edit-btn:hover { background: #fbcfe8; }
+        .delete-btn { background: #fee2e2; color: #b91c1c; }
+        .delete-btn:hover { background: #fecaca; }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            overflow: auto;
+            background: rgba(162,28,175,0.10);
+        }
+        .modal-content {
+            background: rgba(255,255,255,0.95);
+            margin: 8% auto;
+            padding: 36px 32px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(236,72,153,0.18);
+            position: relative;
+            border: 2px solid #f3e8ff;
+            backdrop-filter: blur(8px);
+        }
+        .close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: #a21caf;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #a21caf;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            color: #232946;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid #e0e7ff;
+            font-size: 1rem;
+            background: #f3e8ff;
+            color: #232946;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            border-color: #a21caf;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(162,28,175,0.08);
+        }
+        .save-btn {
+            background: linear-gradient(135deg, #a21caf 60%, #ec4899 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 0;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .save-btn:hover {
+            background: linear-gradient(135deg, #ec4899 60%, #a21caf 100%);
+            color: #fff;
+        }
+        @media (max-width: 800px) {
+            .main-content { margin-left: 0; padding: 16px; }
+            .customers-header { flex-direction: column; align-items: stretch; }
+            .customers-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+    <div class="panel">
+        <h1><i class="fas fa-users"></i> Customers</h1>
+        <!-- Customers Header -->
+        <div class="customers-header">
+            <input class="search-box" type="text" placeholder="Search customers..." id="searchInput" onkeyup="filterCustomers()">
+            <button class="add-btn" onclick="openAddCustomerModal()"><i class="fas fa-plus"></i></button>
+        </div>
+        <!-- Customers Grid -->
+        <div class="customers-grid">
+            <div class="customer-card">
+                <div class="customer-avatar"><i class="fas fa-user"></i></div>
+                <div class="customer-name">Priya Mehta</div>
+                <div class="customer-email"><i class="fas fa-envelope"></i> priya.mehta@email.com</div>
+                <div class="customer-phone"><i class="fas fa-phone"></i> +91 9123456780</div>
+                <div class="customer-address"><i class="fas fa-map-marker-alt"></i> Mumbai, India</div>
+                <div class="customer-stats">
+                    <div class="stat-item">Orders: 12</div>
+                    <div class="stat-item">Spent: ₹24,500</div>
+                </div>
+                <div class="customer-actions">
+                    <button class="action-btn view-btn"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+            <div class="customer-card">
+                <div class="customer-avatar"><i class="fas fa-user"></i></div>
+                <div class="customer-name">Rakesh Singh</div>
+                <div class="customer-email"><i class="fas fa-envelope"></i> rakesh.singh@email.com</div>
+                <div class="customer-phone"><i class="fas fa-phone"></i> +91 9988776655</div>
+                <div class="customer-address"><i class="fas fa-map-marker-alt"></i> Delhi, India</div>
+                <div class="customer-stats">
+                    <div class="stat-item">Orders: 8</div>
+                    <div class="stat-item">Spent: ₹12,800</div>
+                </div>
+                <div class="customer-actions">
+                    <button class="action-btn view-btn"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+            <div class="customer-card">
+                <div class="customer-avatar"><i class="fas fa-user"></i></div>
+                <div class="customer-name">John Doe</div>
+                <div class="customer-email"><i class="fas fa-envelope"></i> john.doe@email.com</div>
+                <div class="customer-phone"><i class="fas fa-phone"></i> +91 9876543210</div>
+                <div class="customer-address"><i class="fas fa-map-marker-alt"></i> Pune, India</div>
+                <div class="customer-stats">
+                    <div class="stat-item">Orders: 15</div>
+                    <div class="stat-item">Spent: ₹32,100</div>
+                </div>
+                <div class="customer-actions">
+                    <button class="action-btn view-btn"><i class="fas fa-eye"></i> View</button>
+                    <button class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Add Customer Modal -->
+<div id="addCustomerModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddCustomerModal()">&times;</span>
+        <div class="modal-title">Add New Customer</div>
+        <form class="modal-form">
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Phone</label>
+                <input type="tel" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Address</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Credit Limit</label>
+                <input type="number" class="form-input" required>
+            </div>
+            <button type="submit" class="save-btn">Add Customer</button>
+        </form>
+    </div>
+</div>
+<script>
+    function openAddCustomerModal() {
+        document.getElementById('addCustomerModal').style.display = 'block';
+    }
+    function closeAddCustomerModal() {
+        document.getElementById('addCustomerModal').style.display = 'none';
+    }
+    window.onclick = function(event) {
+        if (event.target === document.getElementById('addCustomerModal')) {
+            closeAddCustomerModal();
+        }
+    }
+    function filterCustomers() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.customer-card');
+        cards.forEach(card => {
+            const name = card.querySelector('.customer-name').textContent.toLowerCase();
+            const email = card.querySelector('.customer-email').textContent.toLowerCase();
+            if (name.includes(search) || email.includes(search)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+</body>
+</html> 

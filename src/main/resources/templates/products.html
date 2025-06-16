@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Smart Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: #f6f7fb; color: #232946; }
+        .main-content { margin-left: 240px; padding: 32px; }
+        .panel { background: #fff; border-radius: 18px; box-shadow: 0 4px 24px rgba(44,62,80,0.08); padding: 24px; margin-bottom: 24px; }
+        h1 { color: #6b48ff; font-size: 2rem; margin-bottom: 24px; }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        .stat-card { background: linear-gradient(135deg, #6b48ff, #5536e0); color: white; border-radius: 16px; padding: 24px; }
+        .stat-title { font-size: 0.95rem; opacity: 0.9; margin-bottom: 8px; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+        .stat-change { font-size: 0.9rem; opacity: 0.9; }
+        .stat-icon { font-size: 2rem; margin-bottom: 16px; }
+
+        /* Products Header */
+        .products-header { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 24px; }
+        .search-box { flex: 1; padding: 12px 20px; border-radius: 12px; border: 2px solid #eee; font-size: 1rem; transition: all 0.3s; }
+        .search-box:focus { border-color: #6b48ff; outline: none; box-shadow: 0 0 0 4px rgba(107, 72, 255, 0.1); }
+        .filter-btn { background: #fff; color: #6b48ff; border: 2px solid #6b48ff; border-radius: 12px; padding: 12px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .filter-btn:hover { background: #f0edff; }
+        .add-btn { background: #6b48ff; color: #fff; border: none; border-radius: 12px; padding: 12px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .add-btn:hover { background: #5536e0; transform: translateY(-2px); }
+
+        /* Products Grid */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+        .product-card { background: #fff; border-radius: 16px; box-shadow: 0 4px 16px rgba(44,62,80,0.08); overflow: hidden; transition: transform 0.3s; }
+        .product-card:hover { transform: translateY(-4px); }
+        .product-image { width: 100%; height: 200px; object-fit: cover; }
+        .product-info { padding: 20px; }
+        .product-category { color: #6b48ff; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+        .product-name { color: #232946; font-size: 1.2rem; font-weight: 600; margin-bottom: 12px; }
+        .product-price { color: #232946; font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; }
+        .product-stock { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .stock-indicator { width: 8px; height: 8px; border-radius: 50%; }
+        .in-stock { background: #27ae60; }
+        .low-stock { background: #f39c12; }
+        .out-of-stock { background: #e74c3c; }
+        .product-actions { display: flex; gap: 8px; }
+        .action-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; font-size: 0.9rem; }
+        .edit-btn { background: #f0edff; color: #6b48ff; }
+        .edit-btn:hover { background: #e0dcff; }
+        .delete-btn { background: #ffe5e5; color: #e74c3c; }
+        .delete-btn:hover { background: #ffd5d5; }
+
+        /* Charts Section */
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-top: 32px; }
+        .chart-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 16px rgba(44,62,80,0.08); }
+        .chart-title { color: #232946; font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; }
+        .chart-container { position: relative; height: 300px; }
+
+        /* Modal styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; overflow: auto; background: rgba(44,62,80,0.18); }
+        .modal-content { background: #fff; margin: 8% auto; padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 8px 32px rgba(44,62,80,0.18); position: relative; }
+        .close { position: absolute; top: 24px; right: 24px; color: #888; font-size: 1.5rem; cursor: pointer; }
+        .modal-title { font-size: 1.3rem; font-weight: 700; color: #6b48ff; margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; color: #232946; font-size: 0.95rem; margin-bottom: 8px; }
+        .form-input { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #eee; font-size: 1rem; transition: all 0.3s; }
+        .form-input:focus { border-color: #6b48ff; outline: none; box-shadow: 0 0 0 4px rgba(107, 72, 255, 0.1); }
+        .save-btn { background: #6b48ff; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; width: 100%; }
+        .save-btn:hover { background: #5536e0; }
+
+        @media (max-width: 800px) { 
+            .main-content { margin-left: 0; padding: 16px; }
+            .products-header { flex-direction: column; align-items: stretch; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+    <div class="panel">
+        <h1><i class="fas fa-box"></i> Products</h1>
+        
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-box-open stat-icon"></i>
+                <div class="stat-title">Total Products</div>
+                <div class="stat-value">1,234</div>
+                <div class="stat-change">+12% from last month</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-tags stat-icon"></i>
+                <div class="stat-title">Categories</div>
+                <div class="stat-value">24</div>
+                <div class="stat-change">+3 new this month</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-exclamation-triangle stat-icon"></i>
+                <div class="stat-title">Low Stock Items</div>
+                <div class="stat-value">15</div>
+                <div class="stat-change">-5 from last week</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-chart-line stat-icon"></i>
+                <div class="stat-title">Top Selling</div>
+                <div class="stat-value">45</div>
+                <div class="stat-change">+8% growth</div>
+            </div>
+        </div>
+
+        <!-- Products Header -->
+        <div class="products-header">
+            <input class="search-box" type="text" placeholder="Search products..." id="searchInput" onkeyup="filterProducts()">
+            <button class="filter-btn"><i class="fas fa-filter"></i> Filter</button>
+            <button class="add-btn" onclick="openAddModal()"><i class="fas fa-plus"></i> Add Product</button>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="productsGrid">
+            <!-- Sample Product Card 1 -->
+            <div class="product-card">
+                <img src="https://images.unsplash.com/photo-1527864550417-7fd91fc51a46" alt="Wireless Mouse" class="product-image">
+                <div class="product-info">
+                    <div class="product-category">Electronics</div>
+                    <div class="product-name">Wireless Mouse Pro</div>
+                    <div class="product-price">₹1,499</div>
+                    <div class="product-stock">
+                        <span class="stock-indicator in-stock"></span>
+                        <span>In Stock (245 units)</span>
+                    </div>
+                    <div class="product-actions">
+                        <button class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="action-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Product Card 2 -->
+            <div class="product-card">
+                <img src="https://images.unsplash.com/photo-1586953208448-b95a79798f07" alt="USB Cable" class="product-image">
+                <div class="product-info">
+                    <div class="product-category">Accessories</div>
+                    <div class="product-name">USB-C Cable</div>
+                    <div class="product-price">₹299</div>
+                    <div class="product-stock">
+                        <span class="stock-indicator low-stock"></span>
+                        <span>Low Stock (12 units)</span>
+                    </div>
+                    <div class="product-actions">
+                        <button class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="action-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Product Card 3 -->
+            <div class="product-card">
+                <img src="https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1" alt="Desk Chair" class="product-image">
+                <div class="product-info">
+                    <div class="product-category">Furniture</div>
+                    <div class="product-name">Ergonomic Chair</div>
+                    <div class="product-price">₹12,999</div>
+                    <div class="product-stock">
+                        <span class="stock-indicator out-of-stock"></span>
+                        <span>Out of Stock</span>
+                    </div>
+                    <div class="product-actions">
+                        <button class="action-btn edit-btn"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="action-btn delete-btn"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Product Categories Distribution</div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Stock Level Trends</div>
+                <div class="chart-container">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddModal()">&times;</span>
+        <div class="modal-title">Add New Product</div>
+        <form class="modal-form">
+            <div class="form-group">
+                <label class="form-label">Product Name</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Price</label>
+                <input type="number" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Stock Quantity</label>
+                <input type="number" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Product Image URL</label>
+                <input type="url" class="form-input" required>
+            </div>
+            <button type="submit" class="save-btn">Add Product</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Category Distribution Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Electronics', 'Furniture', 'Accessories', 'Stationery'],
+            datasets: [{
+                data: [40, 25, 20, 15],
+                backgroundColor: ['#6b48ff', '#27ae60', '#f39c12', '#e74c3c'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Stock Level Trends Chart
+    const stockCtx = document.getElementById('stockChart').getContext('2d');
+    new Chart(stockCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Stock Level',
+                data: [1200, 1150, 1300, 1250, 1400, 1350],
+                borderColor: '#6b48ff',
+                backgroundColor: 'rgba(107, 72, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    function openAddModal() {
+        document.getElementById('addModal').style.display = 'block';
+    }
+    
+    function closeAddModal() {
+        document.getElementById('addModal').style.display = 'none';
+    }
+    
+    window.onclick = function(event) {
+        if (event.target === document.getElementById('addModal')) {
+            closeAddModal();
+        }
+    }
+    
+    function filterProducts() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.product-card');
+        
+        cards.forEach(card => {
+            const name = card.querySelector('.product-name').textContent.toLowerCase();
+            const category = card.querySelector('.product-category').textContent.toLowerCase();
+            
+            if (name.includes(search) || category.includes(search)) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+</body>
+</html> 

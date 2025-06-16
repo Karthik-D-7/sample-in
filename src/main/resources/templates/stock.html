@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock - Smart Inventory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #232946 60%, #1a1f2b 100%);
+            color: #f6f7fb;
+        }
+        .main-content {
+            margin-left: 240px;
+            padding: 32px;
+        }
+        .panel {
+            background: rgba(30, 34, 44, 0.98);
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(44,62,80,0.18);
+            padding: 28px 24px 32px 24px;
+            margin-bottom: 24px;
+            border: 2px solid #2d3648;
+            position: relative;
+            overflow: hidden;
+        }
+        .panel:before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('https://www.transparenttextures.com/patterns/square-bg.png');
+            opacity: 0.08;
+            pointer-events: none;
+        }
+        h1 {
+            color: #ff9800;
+            font-size: 2.2rem;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: #232946;
+            border: 2px solid #ff9800;
+            color: #fff;
+            border-radius: 14px;
+            padding: 22px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            box-shadow: 0 2px 12px rgba(255,152,0,0.08);
+            position: relative;
+        }
+        .stat-icon {
+            font-size: 2.2rem;
+            color: #ff9800;
+            margin-bottom: 10px;
+        }
+        .stat-title {
+            font-size: 1rem;
+            opacity: 0.85;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .stat-value {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .stat-change {
+            font-size: 0.95rem;
+            color: #4fc3f7;
+        }
+        /* Stock Header */
+        .stock-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .search-box {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 2px solid #2d3648;
+            font-size: 1rem;
+            background: #232946;
+            color: #fff;
+            transition: all 0.3s;
+        }
+        .search-box:focus {
+            border-color: #ff9800;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(255,152,0,0.08);
+        }
+        .add-btn {
+            background: #ff9800;
+            color: #232946;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(255,152,0,0.10);
+        }
+        .add-btn:hover {
+            background: #ffa726;
+            transform: translateY(-2px);
+        }
+        /* Stock Table */
+        .stock-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+            margin-bottom: 32px;
+        }
+        .stock-table th, .stock-table td {
+            padding: 14px 12px;
+            text-align: left;
+        }
+        .stock-table th {
+            background: #232946;
+            color: #ff9800;
+            font-weight: 700;
+            border-bottom: 2px solid #2d3648;
+            font-size: 1.05rem;
+        }
+        .stock-table tr {
+            background: #232946;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+        }
+        .stock-table td {
+            color: #f6f7fb;
+            font-size: 1rem;
+            border-bottom: 1px solid #2d3648;
+        }
+        .stock-table .status {
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            display: inline-block;
+        }
+        .in-stock { background: #263238; color: #4fc3f7; }
+        .low-stock { background: #ff9800; color: #232946; }
+        .out-of-stock { background: #e74c3c; color: #fff; }
+        .action-btn {
+            background: #2d3648;
+            color: #ff9800;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-right: 6px;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            background: #ff9800;
+            color: #232946;
+        }
+        /* Movement History */
+        .movement-history {
+            background: #1a1f2b;
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.10);
+        }
+        .history-title {
+            color: #4fc3f7;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+        .history-icon {
+            font-size: 1.2rem;
+            color: #ff9800;
+        }
+        .history-desc {
+            color: #f6f7fb;
+            font-size: 1rem;
+        }
+        .history-time {
+            color: #4fc3f7;
+            font-size: 0.95rem;
+            margin-left: auto;
+        }
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+        .chart-card {
+            background: #232946;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 16px rgba(44,62,80,0.10);
+            border: 2px solid #4fc3f7;
+        }
+        .chart-title {
+            color: #4fc3f7;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            overflow: auto;
+            background: rgba(44,62,80,0.28);
+        }
+        .modal-content {
+            background: #232946;
+            margin: 8% auto;
+            padding: 32px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(44,62,80,0.28);
+            position: relative;
+            border: 2px solid #ff9800;
+        }
+        .close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: #ff9800;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ff9800;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            color: #f6f7fb;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #2d3648;
+            font-size: 1rem;
+            background: #1a1f2b;
+            color: #fff;
+            transition: all 0.3s;
+        }
+        .form-input:focus {
+            border-color: #ff9800;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(255,152,0,0.08);
+        }
+        .save-btn {
+            background: #ff9800;
+            color: #232946;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .save-btn:hover {
+            background: #ffa726;
+        }
+        @media (max-width: 800px) {
+            .main-content { margin-left: 0; padding: 16px; }
+            .stock-header { flex-direction: column; align-items: stretch; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-content">
+    <div class="panel">
+        <h1><i class="fas fa-warehouse"></i> Stock</h1>
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-boxes stat-icon"></i>
+                <div class="stat-title">Total Stock Items</div>
+                <div class="stat-value">2,340</div>
+                <div class="stat-change">+5% this month</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-exclamation-triangle stat-icon"></i>
+                <div class="stat-title">Low Stock</div>
+                <div class="stat-value">18</div>
+                <div class="stat-change">-2 from last week</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-ban stat-icon"></i>
+                <div class="stat-title">Out of Stock</div>
+                <div class="stat-value">7</div>
+                <div class="stat-change">+1 from yesterday</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-exchange-alt stat-icon"></i>
+                <div class="stat-title">Stock Movements</div>
+                <div class="stat-value">124</div>
+                <div class="stat-change">+12 this week</div>
+            </div>
+        </div>
+        <!-- Stock Header -->
+        <div class="stock-header">
+            <input class="search-box" type="text" placeholder="Search stock..." id="searchInput" onkeyup="filterStock()">
+            <button class="add-btn" onclick="openAddModal()"><i class="fas fa-plus"></i> Adjust Stock</button>
+        </div>
+        <!-- Stock Table -->
+        <table class="stock-table" id="stockTable">
+            <thead>
+            <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>Category</th>
+                <th>Current Stock</th>
+                <th>Status</th>
+                <th>Last Updated</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Wireless Mouse Pro</td>
+                <td>WM-001</td>
+                <td>Electronics</td>
+                <td>245</td>
+                <td><span class="status in-stock">In Stock</span></td>
+                <td>2024-06-01</td>
+                <td>
+                    <button class="action-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+            <tr>
+                <td>USB-C Cable</td>
+                <td>UC-101</td>
+                <td>Accessories</td>
+                <td>12</td>
+                <td><span class="status low-stock">Low Stock</span></td>
+                <td>2024-06-02</td>
+                <td>
+                    <button class="action-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Ergonomic Chair</td>
+                <td>CH-301</td>
+                <td>Furniture</td>
+                <td>0</td>
+                <td><span class="status out-of-stock">Out of Stock</span></td>
+                <td>2024-06-03</td>
+                <td>
+                    <button class="action-btn"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="action-btn"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Movement History -->
+        <div class="movement-history">
+            <div class="history-title">Recent Stock Movements</div>
+            <ul class="history-list">
+                <li class="history-item">
+                    <i class="fas fa-arrow-up history-icon"></i>
+                    <span class="history-desc">Added 50 units to Wireless Mouse Pro</span>
+                    <span class="history-time">Today, 10:15 AM</span>
+                </li>
+                <li class="history-item">
+                    <i class="fas fa-arrow-down history-icon"></i>
+                    <span class="history-desc">Removed 5 units from USB-C Cable</span>
+                    <span class="history-time">Yesterday, 4:20 PM</span>
+                </li>
+                <li class="history-item">
+                    <i class="fas fa-arrow-up history-icon"></i>
+                    <span class="history-desc">Added 10 units to Ergonomic Chair</span>
+                    <span class="history-time">2 days ago</span>
+                </li>
+            </ul>
+        </div>
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-title">Stock Level Trends</div>
+                <div class="chart-container">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Stock by Category</div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Adjust Stock Modal -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeAddModal()">&times;</span>
+        <div class="modal-title">Adjust Stock</div>
+        <form class="modal-form">
+            <div class="form-group">
+                <label class="form-label">Product</label>
+                <input type="text" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Adjustment Type</label>
+                <select class="form-input" required>
+                    <option value="">Select Type</option>
+                    <option value="add">Add</option>
+                    <option value="remove">Remove</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea class="form-input" rows="2"></textarea>
+            </div>
+            <button type="submit" class="save-btn">Save Adjustment</button>
+        </form>
+    </div>
+</div>
+<script>
+    // Stock Level Trends Chart
+    const stockCtx = document.getElementById('stockChart').getContext('2d');
+    new Chart(stockCtx, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            datasets: [{
+                label: 'Stock Level',
+                data: [1200, 1150, 1300, 1250, 1400, 1350],
+                borderColor: '#ff9800',
+                backgroundColor: 'rgba(255,152,0,0.08)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    // Stock by Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Electronics', 'Furniture', 'Accessories', 'Stationery'],
+            datasets: [{
+                label: 'Stock',
+                data: [800, 300, 900, 340],
+                backgroundColor: ['#ff9800', '#4fc3f7', '#e74c3c', '#263238'],
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    function openAddModal() {
+        document.getElementById('addModal').style.display = 'block';
+    }
+    function closeAddModal() {
+        document.getElementById('addModal').style.display = 'none';
+    }
+    window.onclick = function(event) {
+        if (event.target === document.getElementById('addModal')) {
+            closeAddModal();
+        }
+    }
+    function filterStock() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#stockTable tbody tr');
+        rows.forEach(row => {
+            const name = row.children[0].textContent.toLowerCase();
+            const sku = row.children[1].textContent.toLowerCase();
+            const category = row.children[2].textContent.toLowerCase();
+            if (name.includes(search) || sku.includes(search) || category.includes(search)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+</body>
+</html> 
